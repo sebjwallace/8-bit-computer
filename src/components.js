@@ -19,6 +19,10 @@ module.exports = {
 
     XOR(i1,i2){
         return i1 != i2 ? 1 : 0
+    },
+
+    PIN(i1){
+        return i1
     }
 
 }

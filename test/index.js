@@ -1,6 +1,7 @@
 
 const {assert,expect,should} = require('chai')
 const {OR,AND,NOR,NAND,XOR} = require('../src/Gates')
+const SRLatch = require('../src/memory/SRLatch')
 
 describe('OR',() => {
 
@@ -98,6 +99,21 @@ describe('XOR',() => {
 
     it('1 XOR 1 = 0', () => {
         expect(XOR(1,1)).to.eq(0)
+    })
+
+})
+
+describe('SRLatch',() => {
+
+    it('will output [0,0] after reset', () => {
+        const srl = new SRLatch()
+        expect(srl.compute(1,1)).to.eql([0,0])
+    })
+    
+    it('will maintain state after reset', () => {
+        const srl = new SRLatch()
+        expect(srl.compute(1,1)).to.eql([0,0])
+        expect(srl.compute(0,0)).to.eql([0,0])
     })
 
 })
