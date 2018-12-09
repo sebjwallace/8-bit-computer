@@ -1,7 +1,8 @@
 
 const {assert,expect,should} = require('chai')
-const {OR,AND,NOR,NAND,XOR} = require('../src/Gates')
-const SRLatch = require('../src/memory/SRLatch')
+const {compute} = require('../src/simulator')
+const {OR,AND,NOR,NAND,XOR} = require('../src/components')
+const {SRLatch} = require('../src/factories')
 
 describe('OR',() => {
 
@@ -105,15 +106,60 @@ describe('XOR',() => {
 
 describe('SRLatch',() => {
 
-    it('will output [0,0] after reset', () => {
-        const srl = new SRLatch()
-        expect(srl.compute(1,1)).to.eql([0,0])
+    const graph = [
+        [1,0,0,0],
+        [0,1,0,0]
+    ]
+    
+    const nodes = [
+        ['PIN'],
+        ['PIN']
+    ]
+    
+    SRLatch(graph,nodes,[0,1])
+    
+    let state = Array.from({length:nodes.length}).fill(0)
+    
+    it('The first NOR is on by default',() => {
+        state = compute(graph,nodes,state)
+        expect(state).to.eql([0,0,1,0])
+    })
+
+    it('The state remains unchanged',() => {
+        state = compute(graph,nodes,state)
+        expect(state).to.eql([0,0,1,0])
+    })
+
+    it('The second NOR is switched on and first NOR is off',() => {
+        // Turn pin 1 on
+        state[1] = 1
+        state = compute(graph,nodes,state)
+        expect(state).to.eql([0,1,0,1])
     })
     
-    it('will maintain state after reset', () => {
-        const srl = new SRLatch()
-        expect(srl.compute(1,1)).to.eql([0,0])
-        expect(srl.compute(0,0)).to.eql([0,0])
+    it('The SRLatch state remains stable',() => {
+        // Turn pin 1 off
+        state[1] = 0
+        state = compute(graph,nodes,state)
+        expect(state).to.eql([0,0,0,1])
+    })
+
+    it('The SRLatch goes into an unstable state',() => {
+        // Turn pin 0 back on
+        state[0] = 1
+        state = compute(graph,nodes,state)
+        expect(state).to.eql([1,0,0,0])
+    })
+
+    it('The SRLatch returns to a stable state',() => {
+        state = compute(graph,nodes,state)
+        expect(state).to.eql([1,0,1,0])
+    })
+
+    it('The SRLatch remains in a stable state',() => {
+        state[0] = 0
+        state = compute(graph,nodes,state)
+        expect(state).to.eql([0,0,1,0])
     })
 
 })

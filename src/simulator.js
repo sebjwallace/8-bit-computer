@@ -18,7 +18,7 @@ module.exports = {
             // Pass the inputs into the component and assign to the output.
             const output = components[nodes[i]].apply(this,inputs)
             // Update the state for the following target nodes.
-            state[i] = output
+            state[i] = output || 0
         })
         return state
     }
