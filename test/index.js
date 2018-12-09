@@ -2,7 +2,7 @@
 const {assert,expect,should} = require('chai')
 const {compute} = require('../src/simulator')
 const {OR,AND,NOR,NAND,XOR} = require('../src/components')
-const {SRLatch} = require('../src/factories')
+const {SRLatch,DLatch} = require('../src/factories')
 
 describe('OR',() => {
 
@@ -107,6 +107,7 @@ describe('XOR',() => {
 describe('SRLatch',() => {
 
     const graph = [
+        // [PIN,PIN,NOR,NOR]
         [1,0,0,0],
         [0,1,0,0]
     ]
@@ -160,6 +161,96 @@ describe('SRLatch',() => {
         state[0] = 0
         state = compute(graph,nodes,state)
         expect(state).to.eql([0,0,1,0])
+    })
+
+})
+
+describe('DLatch',() => {
+
+    const graph = [
+        [1,0,0,0],
+        [0,1,0,0]
+    ]
+    
+    const nodes = [
+        ['PIN'],
+        ['PIN']
+    ]
+    
+    DLatch(graph,nodes,[0,1])
+    
+    let state = Array.from({length:nodes.length}).fill(0)
+
+    it('Is 0 by default',() => {
+        state = compute(graph,nodes,state)
+        expect(state).to.eql([
+            0, // first pin off
+            0, // second pin (enable) off
+            1, // inverter on
+            0, // first AND off
+            0, // second AND off
+            1, // first XOR on by default
+            0, // second AND off by default
+        ])
+    })
+
+    it('Continues to hold a stable state',() => {
+        state = compute(graph,nodes,state)
+        expect(state).to.eql([0,0,1,0,0,1,0])
+    })
+
+    it('Does not set new state when enable is off',() => {
+        state[0] = 1 // d
+        state[1] = 0 // en
+        state = compute(graph,nodes,state)
+        expect(state).to.eql([
+            1, // d is on
+            0, // enable is off
+            0, // inverter is off (inverts d)
+            0, // first AND is off
+            0, // second AND is off
+            1, // first NOR on by default
+            0 // second NOR off by default
+        ])
+    })
+
+    it('Does set new state when enable is on',() => {
+        state[0] = 1 // d
+        state[1] = 1 // en
+        state = compute(graph,nodes,state)
+        expect(state).to.eql([
+            1, // d is on
+            1, // enable is on
+            0, // inverter is off (inverts d)
+            0, // first AND is off
+            1, // second AND is on as d and enable are on
+            0, // first NOR off
+            1 // second NOR on
+        ])
+    })
+
+    it('Does not set new state when enable is off and DLatch remains stable',() => {
+        state[0] = 0 // d
+        state[1] = 0 // en
+        state = compute(graph,nodes,state)
+        expect(state).to.eql([0,0,1,0,0,0,1])
+    })
+
+    it('Does set new state when enable is on',() => {
+        state[0] = 0 // d
+        state[1] = 1 // en
+        state = compute(graph,nodes,state)
+        // Skip a step to allow for SRLatch to stabilize from transition
+        state = compute(graph,nodes,state)
+        expect(state).to.eql([
+            0, // d is off
+            1, // enable is on
+            1, // inverter is on (inverts d)
+            1, // first AND is on as inverter and enable are on
+            0, // second AND is off
+            1, // first NOR on
+            0 // second NOR off
+        ])
     })
 
 })

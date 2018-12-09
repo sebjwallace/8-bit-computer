@@ -21,6 +21,10 @@ module.exports = {
         return i1 != i2 ? 1 : 0
     },
 
+    INVERTER(i1){
+        return i1 == 1 ? 0 : 1
+    },
+
     PIN(i1){
         return i1
     }
